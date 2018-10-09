@@ -1,0 +1,12 @@
+[package]
+name = "scoping-tool-backend"
+version = "0.1.0"
+authors = ["Peter East <petereast@pm.me>"]
+
+[dependencies]
+serde = "1.0.79"
+serde_json = "1.0.32"
+serde_derive = "1.0.79"
+actix = "0.7.4"
+actix-web = "0.7.8"
+uuid = "0.7.1"
