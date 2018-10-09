@@ -7,11 +7,6 @@ ok{
   expires: "time"
 }
 
-GET /submission-count?id=uuid
-ok{
-  response-count: int
-}
-
 GET /results?id=uuid
 ok{
   response_count: int
