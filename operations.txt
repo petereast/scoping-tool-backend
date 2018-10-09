@@ -9,9 +9,13 @@ ok{
 
 GET /results?id=uuid
 ok{
-  response_count: int
-  average_value: int
-  responses: []
+  responses: [
+    {
+      name: "",
+      value: "",
+      time: "",
+    }
+  ]
 }
 
 POST /end-session
@@ -29,4 +33,12 @@ created{
   id: "unique identifier",
   url: "",
   created_at: ""
+  exires_at: ""
+}
+
+POST /submit
+{
+  session_id: "uuid",
+  name: "",
+  value: ""
 }
