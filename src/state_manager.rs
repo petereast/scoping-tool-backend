@@ -103,7 +103,7 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
 
                             Ok(GetSessionResultResponse {
                                 title: state.title.clone(),
-                                description: state.title.clone(),
+                                description: state.description.clone(),
                                 response_count: responses.len(),
                                 responses: responses,
                                 average_response,
