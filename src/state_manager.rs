@@ -96,10 +96,14 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
                                     _ => None,
                                 }).collect();
 
-                            let average_response =
-                                responses.iter().fold(responses[0].value, |acc, response| {
-                                    (acc + response.value) / 2
-                                });
+                            let average_response = match responses.get(0) {
+                                Some(initial_value) => {
+                                    responses.iter().fold(initial_value.value, |acc, response| {
+                                        (acc + response.value) / 2
+                                    })
+                                }
+                                None => 0,
+                            };
 
                             Ok(GetSessionResultResponse {
                                 title: state.title.clone(),

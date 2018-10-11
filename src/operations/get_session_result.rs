@@ -11,10 +11,12 @@ pub fn get_session_result(
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     println!("[Request] get_session_result: {:?}", get_path);
 
+    let session_id = get_path.id.clone();
+
     let (responder, recv) = sync_channel(1);
 
     let outgoing_event = GetSessionResult {
-        session_id: get_path.id.clone(),
+        session_id: session_id.clone(),
         responder,
     };
 
@@ -24,6 +26,12 @@ pub fn get_session_result(
         .unwrap();
 
     let data_response = recv.recv().unwrap();
+
+    state
+        .outgoing_events
+        .send(SystemEvents::EndSessionEvent(EndSessionEvent {
+            session_id: session_id.clone(),
+        })).unwrap();
 
     println!("thing: {:?}", data_response);
 
