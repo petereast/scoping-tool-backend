@@ -79,6 +79,39 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
                         None => Err(()),
                     }).unwrap();
             }
+            SystemEvents::GetSessionResult(e) => {
+                e.responder
+                    .send(match session_state.clone().get(&e.session_id) {
+                        Some(state) => {
+                            let responses: Vec<SubmissionContent> = state
+                                .session_events
+                                .iter()
+                                .filter_map(|ev| match ev {
+                                    SystemEvents::SubmitResponseEvent(submission) => {
+                                        Some(SubmissionContent {
+                                            name: submission.name.clone(),
+                                            value: submission.value.clone(),
+                                        })
+                                    }
+                                    _ => None,
+                                }).collect();
+
+                            let average_response =
+                                responses.iter().fold(responses[0].value, |acc, response| {
+                                    (acc + response.value) / 2
+                                });
+
+                            Ok(GetSessionResultResponse {
+                                title: state.title.clone(),
+                                description: state.title.clone(),
+                                response_count: responses.len(),
+                                responses: responses,
+                                average_response,
+                            })
+                        }
+                        None => Err(()),
+                    }).unwrap();
+            }
             _ => {
                 println!("System events");
             }

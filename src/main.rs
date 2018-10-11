@@ -5,10 +5,8 @@ extern crate rand;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-#[macro_use]
 extern crate json;
+extern crate serde_json;
 
 mod events;
 mod http_interface;
@@ -17,22 +15,11 @@ mod state;
 mod state_manager;
 mod utils;
 
-use actix_web::{
-    http, server::HttpServer, App, AsyncResponder, Error, HttpMessage, HttpRequest, HttpResponse,
-    Json, Path, State,
-};
-use events::*;
-use futures::future::{ok as FutOk, Future};
-use http_interface::*;
+use actix_web::{http, server::HttpServer, App, HttpResponse};
 use operations::*;
-use state::*;
+use state::AppState;
 use state_manager::start_state_manager;
-use std::boxed::Box;
-use std::collections::HashMap;
 use std::sync::mpsc;
-use std::sync::mpsc::SyncSender;
-use std::sync::Mutex;
-use std::thread;
 
 fn main() {
     let sys = actix::System::new("web");
@@ -56,6 +43,8 @@ fn main() {
             r.method(http::Method::GET).with(get_session_details)
         }).resource("/get-response-count/{id}", |r| {
             r.method(http::Method::GET).with(get_response_count)
+        }).resource("/get-session-result/{id}", |r| {
+            r.method(http::Method::GET).with(get_session_result)
         })
     }).bind("127.0.0.1:8008")
     .unwrap()

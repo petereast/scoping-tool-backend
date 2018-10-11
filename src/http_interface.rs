@@ -1,3 +1,5 @@
+use events::SubmissionContent;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NewScopingSessionCmd {
     pub title: String,
@@ -28,6 +30,11 @@ pub struct GetSessionDetailsCmd {
     pub id: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GetSessionResultCmd {
+    pub id: String,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NewScopingSessionOkResponse {
     pub id: String,
@@ -41,6 +48,16 @@ pub struct GetResponseCountOkResponse {
     pub count: usize,
     pub session_id: String,
 }
+
+#[derive(Serialize, Debug)]
+pub struct GetSessionResultOkResponse {
+    pub title: String,
+    pub description: String,
+    pub response_count: usize,
+    pub average_response: u32,
+    pub responses: Vec<SubmissionContent>,
+}
+
 impl NewScopingSessionOkResponse {
     pub fn new(id: String, url: String, expires_at: String) -> Self {
         Self {

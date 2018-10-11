@@ -38,6 +38,27 @@ pub struct GetResponseCount {
     pub responder: SyncSender<Result<Vec<String>, ()>>,
 }
 
+#[derive(Debug, Clone)]
+pub struct GetSessionResult {
+    pub session_id: String,
+    pub responder: SyncSender<Result<GetSessionResultResponse, ()>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct GetSessionResultResponse {
+    pub title: String,
+    pub description: String,
+    pub response_count: usize,
+    pub average_response: u32,
+    pub responses: Vec<SubmissionContent>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SubmissionContent {
+    pub name: String,
+    pub value: u32,
+}
+
 #[derive(Clone, Debug)]
 pub enum SystemEvents {
     StartNewSessionEvent(StartNewSessionEvent),
@@ -45,4 +66,5 @@ pub enum SystemEvents {
     SubmitResponseEvent(SubmitResponseEvent),
     GetSessionDetails(GetSessionDetails),
     GetResponseCount(GetResponseCount),
+    GetSessionResult(GetSessionResult),
 }
