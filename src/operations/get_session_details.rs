@@ -1,9 +1,9 @@
 use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
 use futures::future::{ok as FutOk, Future};
+use mpsc::sync_channel;
 
 use events::*;
 use http_interface::*;
-use serde_json::to_string;
 use state::*;
 
 pub fn get_session_details(
@@ -11,18 +11,28 @@ pub fn get_session_details(
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     println!("[Request] submit_response: {:?}", get_path);
 
-    let response = GetSessionDetailsOkResponse {
-        title: "".into(),
-        description: "".into(),
+    let (responder, recv) = sync_channel(1);
+
+    let outgoing_event = GetSessionDetails {
         session_id: get_path.id.clone(),
+        responder,
     };
 
-    // Trigger a state request with an event that contains a channel sender
-    // wait for the response from the new channel
+    state
+        .outgoing_events
+        .send(SystemEvents::GetSessionDetails(outgoing_event))
+        .unwrap();
 
-    FutOk(
-        HttpResponse::Ok()
-            .content_type("application/json")
-            .body(to_string(&response).unwrap()),
-    ).responder()
+    let data_response = recv.recv().unwrap();
+
+    println!("thing: {:?}", data_response);
+
+    match data_response {
+        Ok(r) => FutOk(HttpResponse::Ok().json(GetSessionDetailsOkResponse {
+            title: r.title,
+            description: r.description,
+            session_id: get_path.id.clone(),
+        })).responder(),
+        Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
+    }
 }

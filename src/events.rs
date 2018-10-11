@@ -1,3 +1,5 @@
+use mpsc::SyncSender;
+
 // System Events
 #[derive(Debug, Clone)]
 pub struct StartNewSessionEvent {
@@ -18,9 +20,22 @@ pub struct SubmitResponseEvent {
     pub value: u32,
 }
 
+#[derive(Debug, Clone)]
+pub struct GetSessionDetails {
+    pub session_id: String,
+    pub responder: SyncSender<Result<GetSessionDetailsResponse, ()>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct GetSessionDetailsResponse {
+    pub title: String,
+    pub description: String,
+}
+
 #[derive(Clone, Debug)]
 pub enum SystemEvents {
     StartNewSessionEvent(StartNewSessionEvent),
     EndSessionEvent(EndSessionEvent),
     SubmitResponseEvent(SubmitResponseEvent),
+    GetSessionDetails(GetSessionDetails),
 }

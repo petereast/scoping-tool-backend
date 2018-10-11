@@ -6,8 +6,8 @@ use events::*;
 use state::*;
 
 pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
+    let mut session_state = HashMap::new();
     thread::spawn(move || loop {
-        let mut session_state = HashMap::new();
         match events_incoming_recv.recv().unwrap() {
             SystemEvents::StartNewSessionEvent(e) => {
                 session_state.insert(
@@ -50,6 +50,17 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
                         println!("[warn] invalid id");
                     }
                 }
+            }
+            SystemEvents::GetSessionDetails(e) => {
+                println!("State: {:?}", session_state.clone());
+                e.responder
+                    .send(match session_state.clone().get(&e.session_id) {
+                        Some(state) => Ok(GetSessionDetailsResponse {
+                            title: state.title.clone(),
+                            description: state.description.clone(),
+                        }),
+                        None => Err(()),
+                    }).unwrap();
             }
             _ => {
                 println!("System events");
