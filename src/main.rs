@@ -46,7 +46,7 @@ fn main() {
         }).resource("/get-session-result/{id}", |r| {
             r.method(http::Method::GET).with(get_session_result)
         })
-    }).bind("127.0.0.1:8008")
+    }).bind("0.0.0.0:8008")
     .unwrap()
     .start();
 
