@@ -32,10 +32,17 @@ pub struct GetSessionDetailsResponse {
     pub description: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct GetResponseCount {
+    pub session_id: String,
+    pub responder: SyncSender<Result<Vec<String>, ()>>,
+}
+
 #[derive(Clone, Debug)]
 pub enum SystemEvents {
     StartNewSessionEvent(StartNewSessionEvent),
     EndSessionEvent(EndSessionEvent),
     SubmitResponseEvent(SubmitResponseEvent),
     GetSessionDetails(GetSessionDetails),
+    GetResponseCount(GetResponseCount),
 }

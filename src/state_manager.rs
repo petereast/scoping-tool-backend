@@ -52,13 +52,30 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
                 }
             }
             SystemEvents::GetSessionDetails(e) => {
-                println!("State: {:?}", session_state.clone());
                 e.responder
                     .send(match session_state.clone().get(&e.session_id) {
                         Some(state) => Ok(GetSessionDetailsResponse {
                             title: state.title.clone(),
                             description: state.description.clone(),
                         }),
+                        None => Err(()),
+                    }).unwrap();
+            }
+            SystemEvents::GetResponseCount(e) => {
+                e.responder
+                    .send(match session_state.clone().get(&e.session_id) {
+                        Some(state) => {
+                            let names = state
+                                .session_events
+                                .iter()
+                                .filter_map(|ev| match ev {
+                                    SystemEvents::SubmitResponseEvent(submission) => {
+                                        Some(submission.name.clone())
+                                    }
+                                    _ => None,
+                                }).collect();
+                            Ok(names)
+                        }
                         None => Err(()),
                     }).unwrap();
             }

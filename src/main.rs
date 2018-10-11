@@ -54,6 +54,8 @@ fn main() {
             r.method(http::Method::POST).with(submit_response)
         }).resource("/get-session-details/{id}", |r| {
             r.method(http::Method::GET).with(get_session_details)
+        }).resource("/get-response-count/{id}", |r| {
+            r.method(http::Method::GET).with(get_response_count)
         })
     }).bind("127.0.0.1:8008")
     .unwrap()

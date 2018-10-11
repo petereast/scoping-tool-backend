@@ -35,6 +35,12 @@ pub struct NewScopingSessionOkResponse {
     pub expires_at: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetResponseCountOkResponse {
+    pub names: Vec<String>,
+    pub count: usize,
+    pub session_id: String,
+}
 impl NewScopingSessionOkResponse {
     pub fn new(id: String, url: String, expires_at: String) -> Self {
         Self {
