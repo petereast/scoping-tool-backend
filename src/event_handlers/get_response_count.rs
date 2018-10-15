@@ -4,7 +4,7 @@ use events::{GetResponseCount, SystemEvents};
 use state::*;
 
 pub fn get_response_count(
-    mut session_state: HashMap<String, SessionState>,
+    session_state: &HashMap<String, SessionState>,
     ev: GetResponseCount,
 ) -> () {
     ev.responder

@@ -4,22 +4,14 @@ use events::{GetSessionResult, GetSessionResultResponse, SubmissionContent, Syst
 use state::*;
 
 pub fn get_session_result(
-    mut session_state: HashMap<String, SessionState>,
+    session_state: &mut HashMap<String, SessionState>,
     ev: GetSessionResult,
 ) -> () {
     ev.responder
         .send(match session_state.clone().get(&ev.session_id) {
             Some(state) => {
-                let responses: Vec<SubmissionContent> = state
-                    .session_events
-                    .iter()
-                    .filter_map(|ev| match ev {
-                        SystemEvents::SubmitResponseEvent(submission) => Some(SubmissionContent {
-                            name: submission.name.clone(),
-                            value: submission.value.clone(),
-                        }),
-                        _ => None,
-                    }).collect();
+                let responses: Vec<SubmissionContent> =
+                    aggregate_responses(session_state, ev.session_id);
 
                 let average_response = match responses.get(0) {
                     Some(initial_value) => {
@@ -40,4 +32,24 @@ pub fn get_session_result(
             }
             None => Err(()),
         }).unwrap();
+}
+
+fn aggregate_responses(
+    session_state: &HashMap<String, SessionState>,
+    session_id: String,
+) -> Vec<SubmissionContent> {
+    if let Some(state) = session_state.get(&session_id) {
+        state
+            .session_events
+            .iter()
+            .filter_map(|ev| match ev {
+                SystemEvents::SubmitResponseEvent(submission) => Some(SubmissionContent {
+                    name: submission.name.clone(),
+                    value: submission.value.clone(),
+                }),
+                _ => None,
+            }).collect()
+    } else {
+        Vec::new()
+    }
 }

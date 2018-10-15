@@ -4,7 +4,7 @@ use events::{SubmitResponseEvent, SystemEvents};
 use state::*;
 
 pub fn submit_response(
-    mut session_state: HashMap<String, SessionState>,
+    session_state: &mut HashMap<String, SessionState>,
     ev: SubmitResponseEvent,
 ) -> () {
     match session_state.clone().get(&ev.session_id) {

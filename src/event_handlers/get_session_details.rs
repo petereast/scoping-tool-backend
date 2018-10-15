@@ -4,7 +4,7 @@ use events::{GetSessionDetails, GetSessionDetailsResponse};
 use state::*;
 
 pub fn get_session_details(
-    session_state: HashMap<String, SessionState>,
+    session_state: &HashMap<String, SessionState>,
     ev: GetSessionDetails,
 ) -> () {
     ev.responder
