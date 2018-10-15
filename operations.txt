@@ -2,7 +2,7 @@ GET /scope?id=uuid
 returns: 
 ok{
   title: "string"
-  message: "string"
+  description: "string"
   created_at: ""
   expires: "time"
 }
