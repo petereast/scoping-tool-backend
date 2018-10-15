@@ -8,6 +8,7 @@ extern crate serde_derive;
 extern crate json;
 extern crate serde_json;
 
+mod event_handlers;
 mod events;
 mod http_interface;
 mod operations;
