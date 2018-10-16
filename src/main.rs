@@ -33,27 +33,20 @@ fn main() {
     HttpServer::new(move || {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
-        }).configure(|app| {
-            Cors::for_app(app)
-                .allowed_origin("*")
-                .allowed_methods(vec!["GET", "POST"])
-                .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600)
-                .resource("/health", |r| {
-                    r.f(|_| HttpResponse::Ok().body("System is healthy!\n"))
-                }).resource("/create-new-session", |r| {
-                    r.method(http::Method::POST).with(new_scoping_session)
-                }).resource("/end-session", |r| {
-                    r.method(http::Method::POST).with(end_session)
-                }).resource("/submit", |r| {
-                    r.method(http::Method::POST).with(submit_response)
-                }).resource("/get-session-details/{id}", |r| {
-                    r.method(http::Method::GET).with(get_session_details)
-                }).resource("/get-response-count/{id}", |r| {
-                    r.method(http::Method::GET).with(get_response_count)
-                }).resource("/get-session-result/{id}", |r| {
-                    r.method(http::Method::GET).with(get_session_result)
-                }).register()
+        }).resource("/health", |r| {
+            r.f(|_| HttpResponse::Ok().body("System is healthy!\n"))
+        }).resource("/create-new-session", |r| {
+            r.method(http::Method::POST).with(new_scoping_session)
+        }).resource("/end-session", |r| {
+            r.method(http::Method::POST).with(end_session)
+        }).resource("/submit", |r| {
+            r.method(http::Method::POST).with(submit_response)
+        }).resource("/get-session-details/{id}", |r| {
+            r.method(http::Method::GET).with(get_session_details)
+        }).resource("/get-response-count/{id}", |r| {
+            r.method(http::Method::GET).with(get_response_count)
+        }).resource("/get-session-result/{id}", |r| {
+            r.method(http::Method::GET).with(get_session_result)
         })
     }).bind("0.0.0.0:8008")
     .unwrap()
