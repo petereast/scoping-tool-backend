@@ -15,6 +15,7 @@ pub fn get_session_result(
 
                 let average_response = match responses.get(0) {
                     Some(initial_value) => {
+                        // todo: reponses.into_slice(1)...
                         responses.iter().fold(initial_value.value, |acc, response| {
                             (acc + response.value) / 2
                         })

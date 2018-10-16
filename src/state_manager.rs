@@ -9,7 +9,10 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
     thread::spawn(move || {
         let mut session_state = HashMap::new();
         loop {
-            match events_incoming_recv.recv().unwrap() {
+            let incoming_event = events_incoming_recv.recv().unwrap();
+            // This event is coming from inside the system, but will be copied to be
+            // persisted
+            match incoming_event {
                 SystemEvents::StartNewSessionEvent(e) => {
                     start_new_session(&mut session_state, e);
                 }

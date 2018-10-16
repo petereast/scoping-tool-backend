@@ -16,6 +16,7 @@ mod state;
 mod state_manager;
 mod utils;
 
+use actix_web::middleware::cors::Cors;
 use actix_web::{http, server::HttpServer, App, HttpResponse};
 use operations::*;
 use state::AppState;
@@ -32,20 +33,25 @@ fn main() {
     HttpServer::new(move || {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
-        }).resource("/health", |r| {
-            r.f(|_| HttpResponse::Ok().body("System is healthy!\n"))
-        }).resource("/create-new-session", |r| {
-            r.method(http::Method::POST).with(new_scoping_session)
-        }).resource("/end-session", |r| {
-            r.method(http::Method::POST).with(end_session)
-        }).resource("/submit", |r| {
-            r.method(http::Method::POST).with(submit_response)
-        }).resource("/get-session-details/{id}", |r| {
-            r.method(http::Method::GET).with(get_session_details)
-        }).resource("/get-response-count/{id}", |r| {
-            r.method(http::Method::GET).with(get_response_count)
-        }).resource("/get-session-result/{id}", |r| {
-            r.method(http::Method::GET).with(get_session_result)
+        }).configure(|app| {
+            Cors::for_app(app)
+                .allowed_origin("*")
+                .allowed_methods(vec!["GET", "POST"])
+                .resource("/health", |r| {
+                    r.f(|_| HttpResponse::Ok().body("System is healthy!\n"))
+                }).resource("/create-new-session", |r| {
+                    r.method(http::Method::POST).with(new_scoping_session)
+                }).resource("/end-session", |r| {
+                    r.method(http::Method::POST).with(end_session)
+                }).resource("/submit", |r| {
+                    r.method(http::Method::POST).with(submit_response)
+                }).resource("/get-session-details/{id}", |r| {
+                    r.method(http::Method::GET).with(get_session_details)
+                }).resource("/get-response-count/{id}", |r| {
+                    r.method(http::Method::GET).with(get_response_count)
+                }).resource("/get-session-result/{id}", |r| {
+                    r.method(http::Method::GET).with(get_session_result)
+                }).register()
         })
     }).bind("0.0.0.0:8008")
     .unwrap()
