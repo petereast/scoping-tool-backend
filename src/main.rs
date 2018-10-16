@@ -37,6 +37,8 @@ fn main() {
             Cors::for_app(app)
                 .allowed_origin("*")
                 .allowed_methods(vec!["GET", "POST"])
+                .allowed_header(http::header::CONTENT_TYPE)
+                .max_age(3600)
                 .resource("/health", |r| {
                     r.f(|_| HttpResponse::Ok().body("System is healthy!\n"))
                 }).resource("/create-new-session", |r| {
