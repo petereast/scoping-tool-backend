@@ -20,7 +20,7 @@ pub fn new_scoping_session(
             session_description: payload.description.clone().into(),
         })).unwrap();
 
-    let submission_url = format!("https://something.io/scope/{}", session_id);
+    let submission_url = format!("https://localhost:4200/scope/{}", session_id);
     let response =
         NewScopingSessionOkResponse::new(session_id, submission_url.into(), "BOTTOM TEXT".into());
 
