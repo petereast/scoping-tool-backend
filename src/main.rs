@@ -66,6 +66,12 @@ fn main() {
                     r.method(http::Method::GET).with(get_response_count)
                 }).resource("/get-session-result/{id}", |r| {
                     r.method(http::Method::GET).with(get_session_result)
+                }).resource("/", |r| {
+                    r.f(|_| {
+                        HttpResponse::PermanentRedirect()
+                            .header("location", "/app/")
+                            .finish()
+                    })
                 }).register()
         })
     }).bind(format!("0.0.0.0:{}", port))
