@@ -17,7 +17,7 @@ mod state_manager;
 mod utils;
 
 use actix_web::middleware::cors::Cors;
-use actix_web::{http, server::HttpServer, App, HttpResponse};
+use actix_web::{fs, http, server::HttpServer, App, HttpResponse};
 use operations::*;
 use state::AppState;
 use state_manager::start_state_manager;
@@ -33,7 +33,8 @@ fn main() {
     HttpServer::new(move || {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
-        }).configure(|app| {
+        }).handler("/static/", fs::StaticFiles::new("./static/").unwrap().index_file("index.html"))
+        .configure(|app| {
             Cors::for_app(app)
 //                .allowed_origin("All")
 //                .send_wildcard()
@@ -55,6 +56,8 @@ fn main() {
                     r.method(http::Method::GET).with(get_response_count)
                 }).resource("/get-session-result/{id}", |r| {
                     r.method(http::Method::GET).with(get_session_result)
+                }).resource("/", |r| {
+                    r.f(|_| HttpResponse::PermanentRedirect().header(http::header::LOCATION, "/static/").finish())
                 }).register()
         })
     }).bind("0.0.0.0:8008")
