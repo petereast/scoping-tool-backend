@@ -27,11 +27,13 @@ pub fn get_response_count(
 
     println!("thing: {:?}", data_response);
 
+    let submission_url = format!("http://localhost:4200/scope/{}", get_path.id.clone());
     match data_response {
         Ok(r) => FutOk(HttpResponse::Ok().json(GetResponseCountOkResponse {
             count: r.len(),
             names: r,
             session_id: get_path.id.clone(),
+            submission_url,
         })).responder(),
         Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
     }

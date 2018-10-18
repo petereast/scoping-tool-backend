@@ -47,6 +47,7 @@ pub struct GetResponseCountOkResponse {
     pub names: Vec<String>,
     pub count: usize,
     pub session_id: String,
+    pub submission_url: String,
 }
 
 #[derive(Serialize, Debug)]
