@@ -1,5 +1,6 @@
 use actix_web::{AsyncResponder, Error, HttpResponse, Json, State};
 use futures::future::{ok as FutOk, Future};
+use std::env;
 
 use events::*;
 use http_interface::*;
@@ -20,7 +21,12 @@ pub fn new_scoping_session(
             session_description: payload.description.clone().into(),
         })).unwrap();
 
-    let submission_url = format!("https://localhost:4200/scope/{}", session_id);
+    let app_url = match env::var("URL") {
+        Ok(url) => url,
+        Err(_) => "http://localhost:8008/app/scope/".into(),
+    };
+
+    let submission_url = format!("{}{}", app_url, session_id);
     let response =
         NewScopingSessionOkResponse::new(session_id, submission_url.into(), "BOTTOM TEXT".into());
 

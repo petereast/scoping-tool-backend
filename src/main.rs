@@ -17,10 +17,11 @@ mod state_manager;
 mod utils;
 
 use actix_web::middleware::cors::Cors;
-use actix_web::{fs, http, server::HttpServer, App, HttpResponse};
+use actix_web::{fs, http, server::HttpServer, App, HttpRequest, HttpResponse};
 use operations::*;
 use state::AppState;
 use state_manager::start_state_manager;
+use std::env;
 use std::sync::mpsc;
 
 fn main() {
@@ -28,16 +29,25 @@ fn main() {
 
     let (outgoing_events_sender, events_incoming_recv) = mpsc::sync_channel(10);
 
+    let port = match env::var("PORT") {
+        Ok(p) => p,
+        Err(_) => String::from("8008"),
+    };
+
     start_state_manager(events_incoming_recv);
 
     HttpServer::new(move || {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
-        }).handler("/static/", fs::StaticFiles::new("./static/").unwrap().index_file("index.html"))
-        .configure(|app| {
+        }).handler(
+            "/app/assets",
+            fs::StaticFiles::new("./static/assets").unwrap(),
+        ).handler("/app", |_req: &HttpRequest<AppState>| {
+            HttpResponse::Ok()
+                .content_type("text/html; charset=utf-8")
+                .body(include_str!("../static/index.html"))
+        }).configure(|app| {
             Cors::for_app(app)
-//                .allowed_origin("All")
-//                .send_wildcard()
                 .allowed_methods(vec!["GET", "POST"])
                 .allowed_header(http::header::CONTENT_TYPE)
                 .allowed_header(http::header::ACCEPT)
@@ -56,11 +66,9 @@ fn main() {
                     r.method(http::Method::GET).with(get_response_count)
                 }).resource("/get-session-result/{id}", |r| {
                     r.method(http::Method::GET).with(get_session_result)
-                }).resource("/", |r| {
-                    r.f(|_| HttpResponse::PermanentRedirect().header(http::header::LOCATION, "/static/").finish())
                 }).register()
         })
-    }).bind("0.0.0.0:8008")
+    }).bind(format!("0.0.0.0:{}", port))
     .unwrap()
     .start();
 

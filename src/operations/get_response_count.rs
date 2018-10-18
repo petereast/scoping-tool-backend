@@ -1,6 +1,7 @@
 use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
 use futures::future::{ok as FutOk, Future};
 use mpsc::sync_channel;
+use std::env;
 
 use events::*;
 use http_interface::*;
@@ -27,7 +28,12 @@ pub fn get_response_count(
 
     println!("thing: {:?}", data_response);
 
-    let submission_url = format!("http://localhost:4200/scope/{}", get_path.id.clone());
+    let app_url = match env::var("URL") {
+        Ok(url) => url,
+        Err(_) => "http://localhost:8008/app/scope/".into(),
+    };
+
+    let submission_url = format!("{}{}", app_url, get_path.id.clone());
     match data_response {
         Ok(r) => FutOk(HttpResponse::Ok().json(GetResponseCountOkResponse {
             count: r.len(),
