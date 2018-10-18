@@ -1,0 +1,11 @@
+version: "3"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - URL=http://scopify.work/app/scope/
+      - PORT=80

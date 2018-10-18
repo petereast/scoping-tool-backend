@@ -69,7 +69,7 @@ fn main() {
                 }).resource("/", |r| {
                     r.f(|_| {
                         HttpResponse::PermanentRedirect()
-                            .header("location", "/app/")
+                            .header("Location", "/app/")
                             .finish()
                     })
                 }).register()
