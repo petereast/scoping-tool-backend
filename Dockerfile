@@ -1,13 +1,11 @@
-FROM rust:1.28.0
+FROM ubuntu 
 
 WORKDIR /opt
 
-COPY ./src ./src
+ADD ./docker-start.sh .
+ADD ./static ./static
+COPY target/release/scoping-tool-backend .
 
-COPY ./Cargo.toml .
+EXPOSE 80
 
-RUN cargo build --release
-
-EXPOSE 8008
-
-CMD ["./target/release/scoping-tool-backend"]
+CMD ["./docker-start.sh"]
