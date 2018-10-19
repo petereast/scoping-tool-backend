@@ -30,6 +30,7 @@ pub struct GetSessionDetails {
 pub struct GetSessionDetailsResponse {
     pub title: String,
     pub description: String,
+    pub is_ended: bool,
 }
 
 #[derive(Debug, Clone)]

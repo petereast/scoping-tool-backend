@@ -27,11 +27,14 @@ pub fn get_session_details(
 
     println!("thing: {:?}", data_response);
 
+    // If the session is ended, redirect the user to the results page.
+
     match data_response {
         Ok(r) => FutOk(HttpResponse::Ok().json(GetSessionDetailsOkResponse {
             title: r.title,
             description: r.description,
             session_id: get_path.id.clone(),
+            is_ended: r.is_ended,
         })).responder(),
         Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
     }
