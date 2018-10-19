@@ -25,11 +25,11 @@ pub fn get_session_result(
         .send(SystemEvents::GetSessionResult(outgoing_event))
         .unwrap();
 
-    state
-        .outgoing_events
-        .send(SystemEvents::EndSessionEvent(EndSessionEvent {
-            session_id: session_id.clone(),
-        })).unwrap();
+    //    state
+    //        .outgoing_events
+    //        .send(SystemEvents::EndSessionEvent(EndSessionEvent {
+    //        session_id: session_id.clone(),
+    //        })).unwrap();
 
     let data_response = recv.recv().unwrap();
     println!("thing: {:?}", data_response);
