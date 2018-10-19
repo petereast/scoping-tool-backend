@@ -12,6 +12,7 @@ pub fn get_session_details(
             Some(state) => Ok(GetSessionDetailsResponse {
                 title: state.title.clone(),
                 description: state.description.clone(),
+                is_ended: !state.accepting_new_submissions,
             }),
             None => Err(()),
         }).unwrap();

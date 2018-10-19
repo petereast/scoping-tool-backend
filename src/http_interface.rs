@@ -22,6 +22,7 @@ pub struct SubmitResponseCmd {
 pub struct GetSessionDetailsOkResponse {
     pub session_id: String,
     pub title: String,
+    pub is_ended: bool,
     pub description: String,
 }
 
