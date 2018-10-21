@@ -14,12 +14,13 @@ pub fn get_session_result(
                     aggregate_responses(session_state, ev.session_id);
 
                 let average_response = match responses.get(0) {
-                    Some(initial_value) => {
-                        // todo: reponses.into_slice(1)...
-                        responses.iter().fold(initial_value.value, |acc, response| {
+                    Some(initial_value) => responses
+                        .clone()
+                        .split_off(1)
+                        .iter()
+                        .fold(initial_value.value, |acc, response| {
                             (acc + response.value) / 2
-                        })
-                    }
+                        }),
                     None => 0,
                 };
 
