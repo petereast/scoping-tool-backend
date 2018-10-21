@@ -1,0 +1,25 @@
+version: "3"
+services:
+  backend:
+    command: /bin/sh -c "cargo run"
+    image: rust
+    working_dir: /opt
+    volumes:
+      - .:/opt:z
+    ports:
+      - "8008:8008"
+    environment:
+      - URL=http://localhost:8008/app/scope/
+      - PORT=8008
+    networks:
+      - re
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - re
+networks:
+  re:
+    external:
+      name: infra_redis
