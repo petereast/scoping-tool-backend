@@ -5,11 +5,16 @@ use mpsc::sync_channel;
 use events::*;
 use http_interface::*;
 use state::*;
+use uuid::Uuid;
 
 pub fn get_session_result(
     (get_path, state): (Path<GetSessionResultCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    println!("[Request] get_session_result: {:?}", get_path);
+    let aggregation_id = Uuid::new_v4();
+    state.logger.log(format!(
+        "[Request] get_session_details: {:?}\n[       ] aggregation: {}",
+        get_path, aggregation_id
+    ));
 
     let session_id = get_path.id.clone();
 
@@ -25,14 +30,11 @@ pub fn get_session_result(
         .send(SystemEvents::GetSessionResult(outgoing_event))
         .unwrap();
 
-    //    state
-    //        .outgoing_events
-    //        .send(SystemEvents::EndSessionEvent(EndSessionEvent {
-    //        session_id: session_id.clone(),
-    //        })).unwrap();
-
     let data_response = recv.recv().unwrap();
-    println!("thing: {:?}", data_response);
+    state.logger.log(format!(
+        "[Data Response] aggregation: {}\n[             ] payload: {:?}",
+        aggregation_id, data_response,
+    ));
 
     match data_response {
         Ok(r) => FutOk(HttpResponse::Ok().json(GetSessionResultOkResponse {

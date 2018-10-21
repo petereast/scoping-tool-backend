@@ -1,4 +1,5 @@
 use events::*;
+use logger::*;
 use mpsc::SyncSender;
 
 #[derive(Clone, Debug)]
@@ -22,4 +23,5 @@ impl SessionState {
 
 pub struct AppState {
     pub outgoing_events: SyncSender<SystemEvents>,
+    pub logger: Logger,
 }

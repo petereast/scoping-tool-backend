@@ -2,6 +2,7 @@ use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
 use futures::future::{ok as FutOk, Future};
 use mpsc::sync_channel;
 use std::env;
+use uuid::Uuid;
 
 use events::*;
 use http_interface::*;
@@ -10,7 +11,11 @@ use state::*;
 pub fn get_response_count(
     (get_path, state): (Path<GetSessionDetailsCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    println!("[Request] get_response_count: {:?}", get_path);
+    let agg_correlation_id = Uuid::new_v4();
+    state.logger.log(format!(
+        "[Request] get_response_count: {:?}\n[       ] starting aggregation {}",
+        get_path, agg_correlation_id,
+    ));
 
     let (responder, recv) = sync_channel(1);
 
@@ -26,7 +31,10 @@ pub fn get_response_count(
 
     let data_response = recv.recv().unwrap();
 
-    println!("thing: {:?}", data_response);
+    state.logger.log(format!(
+        "[Data Response] aggregation: {}\n[             ] Result: {:?}",
+        agg_correlation_id, data_response,
+    ));
 
     let app_url = match env::var("URL") {
         Ok(url) => url,

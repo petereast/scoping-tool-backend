@@ -8,9 +8,6 @@ use state::*;
 pub fn submit_response(
     (payload, state): (Json<SubmitResponseCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    println!("[Request] submit_response: {:?}", payload);
-    // Save a response against a session
-
     state
         .outgoing_events
         .send(SystemEvents::SubmitResponseEvent(SubmitResponseEvent {
@@ -19,6 +16,9 @@ pub fn submit_response(
             value: payload.value.clone().into(),
         })).unwrap();
 
+    state
+        .logger
+        .log(format!("[Request] submit_response: {:?}", payload));
     FutOk(
         HttpResponse::Ok()
             .content_type("application/json")

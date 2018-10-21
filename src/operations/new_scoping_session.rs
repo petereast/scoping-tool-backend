@@ -10,7 +10,6 @@ use utils::generate_id;
 pub fn new_scoping_session(
     (payload, state): (Json<NewScopingSessionCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    println!("[Request] new_scoping_session: {:?}", payload);
     let session_id = generate_id();
 
     state
@@ -27,8 +26,12 @@ pub fn new_scoping_session(
     };
 
     let submission_url = format!("{}{}", app_url, session_id);
-    let response =
-        NewScopingSessionOkResponse::new(session_id, submission_url.into(), "BOTTOM TEXT".into());
+
+    state.logger.log(format!(
+        "[Request] new_scoping_session: {:?}\n[       ] Url: {}",
+        payload, submission_url
+    ));
+    let response = NewScopingSessionOkResponse::new(session_id, submission_url.into());
 
     println!("[Response] Ok: {:?}", response);
     FutOk(HttpResponse::Ok().json(response)).responder()
