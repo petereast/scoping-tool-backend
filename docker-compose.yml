@@ -9,3 +9,14 @@ services:
     environment:
       - URL=http://scopify.work/app/scope/
       - PORT=80
+    networks:
+      - re
+  redis:
+    image: redis
+    networks:
+      - re
+
+networks:
+  re:
+    internal:
+      name: infra_redis
