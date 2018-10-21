@@ -40,7 +40,6 @@ pub struct GetSessionResultCmd {
 pub struct NewScopingSessionOkResponse {
     pub id: String,
     pub url: String,
-    pub expires_at: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -61,11 +60,7 @@ pub struct GetSessionResultOkResponse {
 }
 
 impl NewScopingSessionOkResponse {
-    pub fn new(id: String, url: String, expires_at: String) -> Self {
-        Self {
-            id,
-            url,
-            expires_at,
-        }
+    pub fn new(id: String, url: String) -> Self {
+        Self { id, url }
     }
 }

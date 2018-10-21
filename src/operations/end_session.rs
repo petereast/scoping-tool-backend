@@ -8,7 +8,9 @@ use state::*;
 pub fn end_session(
     (payload, state): (Json<EndSessionCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    println!("[Request] end_session: {:?}", payload);
+    state
+        .logger
+        .log(format!("[Request] end_session: {:?}", payload));
     // Stop accepting new, incoming requests
 
     state

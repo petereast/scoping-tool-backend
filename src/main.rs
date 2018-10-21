@@ -6,11 +6,15 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate json;
+extern crate redis;
 extern crate serde_json;
+extern crate uuid;
 
+mod environment;
 mod event_handlers;
 mod events;
 mod http_interface;
+mod logger;
 mod operations;
 mod state;
 mod state_manager;
@@ -18,6 +22,7 @@ mod utils;
 
 use actix_web::middleware::cors::Cors;
 use actix_web::{fs, http, server::HttpServer, App, HttpRequest, HttpResponse};
+use logger::*;
 use operations::*;
 use state::AppState;
 use state_manager::start_state_manager;
@@ -39,6 +44,7 @@ fn main() {
     HttpServer::new(move || {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
+            logger: Logger::new(),
         }).handler(
             "/app/assets",
             fs::StaticFiles::new("./static/assets").unwrap(),

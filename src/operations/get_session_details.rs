@@ -9,7 +9,9 @@ use state::*;
 pub fn get_session_details(
     (get_path, state): (Path<GetSessionDetailsCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    println!("[Request] submit_response: {:?}", get_path);
+    state
+        .logger
+        .log(format!("[Request] get_session_details: {:?}", get_path));
 
     let (responder, recv) = sync_channel(1);
 
@@ -30,12 +32,22 @@ pub fn get_session_details(
     // If the session is ended, redirect the user to the results page.
 
     match data_response {
-        Ok(r) => FutOk(HttpResponse::Ok().json(GetSessionDetailsOkResponse {
-            title: r.title,
-            description: r.description,
-            session_id: get_path.id.clone(),
-            is_ended: r.is_ended,
-        })).responder(),
+        Ok(r) => {
+            if !r.is_ended {
+                FutOk(HttpResponse::Ok().json(GetSessionDetailsOkResponse {
+                    title: r.title,
+                    description: r.description,
+                    session_id: get_path.id.clone(),
+                    is_ended: r.is_ended,
+                })).responder()
+            } else {
+                FutOk(
+                    HttpResponse::TemporaryRedirect()
+                        .header("Location", "/app/results/{}")
+                        .body("Redirecting..."),
+                ).responder()
+            }
+        }
         Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
     }
 }
