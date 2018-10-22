@@ -42,9 +42,10 @@ fn main() {
     start_state_manager(events_incoming_recv);
 
     HttpServer::new(move || {
+        let logger_backend = RedisPublishLogger::new();
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
-            logger: Logger::new(),
+            logger: Logger::with_backend(logger_backend).clone(),
         }).handler(
             "/app/assets",
             fs::StaticFiles::new("./static/assets").unwrap(),

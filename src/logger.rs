@@ -7,6 +7,7 @@ use std::thread;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
+#[derive(Clone)]
 pub struct RedisPublishLogger {
     sender: SyncSender<String>,
 }
@@ -48,6 +49,7 @@ impl RedisPublishLogger {
     }
 }
 
+#[derive(Clone)]
 pub struct Logger {
     sender: SyncSender<String>,
     init_time: SystemTime,
@@ -59,6 +61,13 @@ impl Logger {
 
         Self {
             sender: logger_backend.get_sender(),
+            init_time: SystemTime::now(),
+        }
+    }
+
+    pub fn with_backend(be: RedisPublishLogger) -> Self {
+        Self {
+            sender: be.get_sender(),
             init_time: SystemTime::now(),
         }
     }
