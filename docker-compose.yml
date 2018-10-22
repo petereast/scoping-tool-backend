@@ -18,5 +18,5 @@ services:
 
 networks:
   re:
-    internal:
+    external:
       name: infra_redis
