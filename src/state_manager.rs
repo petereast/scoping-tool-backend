@@ -1,4 +1,4 @@
-use mpsc::{Receiver, SyncSender};
+use mpsc::Receiver;
 use std::collections::HashMap;
 use std::thread;
 
@@ -32,13 +32,4 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
             }
         }
     });
-}
-
-pub fn state_persister(events_outgoing_bus: Receiver<SystemEvents>) {
-    // Spawn a thread to handle persisting events
-}
-
-pub fn state_sync(incoming_events_bus: SyncSender<SystemEvents>) {
-    // Spawn a thread to bring in events from outside - be it through
-    // polling changes in the db or by subscribing to a listener
 }

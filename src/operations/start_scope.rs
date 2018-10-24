@@ -2,7 +2,6 @@ use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
 use futures::future::{ok as FutOk, Future};
 use mpsc::sync_channel;
 
-use environment::app_url;
 use events::*;
 use http_interface::*;
 use state::*;
@@ -48,6 +47,10 @@ pub fn start_scope(
                 ).responder()
             }
         }
-        Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
+        Err(_) => FutOk(
+            HttpResponse::TemporaryRedirect()
+                .header("Location", "/")
+                .finish(),
+        ).responder(),
     }
 }

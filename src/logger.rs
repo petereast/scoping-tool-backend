@@ -3,6 +3,7 @@
 use environment::redis_url;
 use mpsc::{sync_channel, Receiver, SyncSender};
 use redis::{cmd, Client};
+use std::sync::Arc;
 use std::thread;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
@@ -65,7 +66,7 @@ impl Logger {
         }
     }
 
-    pub fn with_backend(be: RedisPublishLogger) -> Self {
+    pub fn with_backend(be: Arc<RedisPublishLogger>) -> Self {
         Self {
             sender: be.get_sender(),
             init_time: SystemTime::now(),
