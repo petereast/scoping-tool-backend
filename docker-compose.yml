@@ -7,7 +7,7 @@ services:
     ports:
       - "80:80"
     environment:
-      - URL=http://scopify.work/app/scope/
+      - URL=http://scopify.work/
       - PORT=80
     networks:
       - re

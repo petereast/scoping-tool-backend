@@ -9,7 +9,7 @@ services:
     ports:
       - "8008:8008"
     environment:
-      - URL=http://localhost:8008/app/scope/
+      - URL=http://localhost:8008/
       - PORT=8008
     networks:
       - re
