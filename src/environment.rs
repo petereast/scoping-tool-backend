@@ -7,3 +7,10 @@ pub fn redis_url() -> String {
         Err(_) => String::from("localhost"),
     }
 }
+
+pub fn app_url() -> String {
+    match env::var("URL") {
+        Ok(v) => v,
+        Err(_) => String::from("http://localhost:8008/"),
+    }
+}

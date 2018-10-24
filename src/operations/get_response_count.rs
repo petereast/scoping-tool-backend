@@ -37,8 +37,8 @@ pub fn get_response_count(
     ));
 
     let app_url = match env::var("URL") {
-        Ok(url) => url,
-        Err(_) => "http://localhost:8008/app/scope/".into(),
+        Ok(url) => format!("{}s/", url),
+        Err(_) => "http://localhost:8008/s/".into(),
     };
 
     let submission_url = format!("{}{}", app_url, get_path.id.clone());

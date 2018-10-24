@@ -73,7 +73,8 @@ fn main() {
                     r.method(http::Method::GET).with(get_response_count)
                 }).resource("/get-session-result/{id}", |r| {
                     r.method(http::Method::GET).with(get_session_result)
-                }).resource("/", |r| {
+                }).resource("/s/{id}", |r| r.method(http::Method::GET).with(start_scope))
+                .resource("/", |r| {
                     r.f(|_| {
                         HttpResponse::PermanentRedirect()
                             .header("Location", "/app/")
