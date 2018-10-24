@@ -27,7 +27,7 @@ use operations::*;
 use state::AppState;
 use state_manager::start_state_manager;
 use std::env;
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc};
 
 fn main() {
     let sys = actix::System::new("web");
@@ -41,11 +41,11 @@ fn main() {
 
     start_state_manager(events_incoming_recv);
 
+    let logger_backend = Arc::from(RedisPublishLogger::new());
     HttpServer::new(move || {
-        let logger_backend = RedisPublishLogger::new();
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
-            logger: Logger::with_backend(logger_backend).clone(),
+            logger: Logger::with_backend(logger_backend.clone()),
         }).handler(
             "/app/assets",
             fs::StaticFiles::new("./static/assets").unwrap(),
