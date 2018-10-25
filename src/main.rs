@@ -6,6 +6,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate json;
+extern crate openssl;
 extern crate redis;
 extern crate serde_json;
 extern crate uuid;
@@ -21,8 +22,9 @@ mod state_manager;
 mod utils;
 
 use actix_web::middleware::cors::Cors;
-use actix_web::{fs, http, server::HttpServer, App, HttpRequest, HttpResponse};
+use actix_web::{fs, http, server, App, HttpRequest, HttpResponse};
 use logger::*;
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use operations::*;
 use state::AppState;
 use state_manager::start_state_manager;
@@ -39,10 +41,24 @@ fn main() {
         Err(_) => String::from("8008"),
     };
 
+    let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+
+    let is_ssl_private_key = ssl_builder
+        .set_private_key_file("../ssl_private_key.pem", SslFiletype::PEM)
+        .map(|_| true)
+        .unwrap_or(false);
+    let is_ssl_chain = ssl_builder
+        .set_certificate_chain_file("../ssl_certificate.pem")
+        .map(|_| true)
+        .unwrap_or(false);
+
+    // Ew gross - clones - idk what's going on here
+    let is_ssl = is_ssl_chain && is_ssl_private_key;
+
     start_state_manager(events_incoming_recv);
 
     let logger_backend = Arc::from(RedisPublishLogger::new());
-    HttpServer::new(move || {
+    let http_server = server::new(move || {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
             logger: Logger::with_backend(logger_backend.clone()),
@@ -82,9 +98,19 @@ fn main() {
                     })
                 }).register()
         })
-    }).bind(format!("0.0.0.0:{}", port))
-    .unwrap()
-    .start();
+    });
+
+    if is_ssl {
+        http_server
+            .bind_ssl(format!("0.0.0.0:{}", port), ssl_builder)
+            .unwrap()
+            .start();
+    } else {
+        http_server
+            .bind(format!("0.0.0.0:{}", port))
+            .unwrap()
+            .start();
+    }
 
     println!("Starting web service");
     let _ = sys.run();
