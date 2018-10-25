@@ -54,15 +54,17 @@ impl RedisPublishLogger {
 pub struct Logger {
     sender: SyncSender<String>,
     init_time: SystemTime,
+    service_name: String,
 }
 
 impl Logger {
-    pub fn new() -> Self {
+    pub fn _new() -> Self {
         let logger_backend = RedisPublishLogger::new();
 
         Self {
             sender: logger_backend.get_sender(),
             init_time: SystemTime::now(),
+            service_name: "SCOPIFY".into(),
         }
     }
 
@@ -70,12 +72,14 @@ impl Logger {
         Self {
             sender: be.get_sender(),
             init_time: SystemTime::now(),
+            service_name: "SCOPIFY".into(),
         }
     }
 
     pub fn log(&self, msg: String) {
         let formatted_message = format!(
-            "[log] ({}) {}",
+            "[log:{}] ({}) {}",
+            self.service_name,
             self.init_time.elapsed().unwrap().as_secs(),
             msg
         );
@@ -83,6 +87,6 @@ impl Logger {
         println!("{}", formatted_message);
         self.sender
             .send(formatted_message)
-            .expect("Logging error, cannot send to redis")
+            .expect("Logging error, cannot send to redis thread")
     }
 }
