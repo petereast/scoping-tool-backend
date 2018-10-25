@@ -5,10 +5,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
+      - "443:443"
       - "80:80"
     environment:
       - URL=http://scopify.work/
-      - PORT=80
+      - PORT=443
     networks:
       - re
   redis:
