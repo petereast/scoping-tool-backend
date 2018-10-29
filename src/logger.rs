@@ -30,7 +30,7 @@ impl RedisPublishLogger {
 
                     sleep(Duration::new(5, 0));
                     println!("Trying again...");
-                    client.get_connection().unwrap()
+                    client.get_connection().expect("fucc")
                 }
             };
 

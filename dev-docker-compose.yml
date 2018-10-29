@@ -8,9 +8,10 @@ services:
       - .:/opt:z
     ports:
       - "8008:8008"
+      - "8000:8000"
+      - "8443:8443"
     environment:
-      - URL=http://localhost:8008/
-      - PORT=8008
+      - URL=http://localhost:8000/
     networks:
       - re
   redis:
