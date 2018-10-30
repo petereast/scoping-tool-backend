@@ -48,6 +48,7 @@ pub struct GetResponseCountOkResponse {
     pub count: usize,
     pub session_id: String,
     pub submission_url: String,
+    pub is_ended: bool,
 }
 
 #[derive(Serialize, Debug)]

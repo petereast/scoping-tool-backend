@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use events::{GetResponseCount, SystemEvents};
+use events::{GetResponseCount, GetResponseCountResponse, SystemEvents};
 use state::*;
 
 pub fn get_response_count(
@@ -19,7 +19,12 @@ pub fn get_response_count(
                         }
                         _ => None,
                     }).collect();
-                Ok(names)
+                let response = GetResponseCountResponse {
+                    names,
+                    is_ended: !state.accepting_new_submissions,
+                };
+
+                Ok(response)
             }
             None => Err(()),
         }).unwrap();

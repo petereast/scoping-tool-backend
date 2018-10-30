@@ -17,6 +17,7 @@ mod events;
 mod http_interface;
 mod logger;
 mod operations;
+mod redis_state_manager;
 mod state;
 mod state_manager;
 mod utils;

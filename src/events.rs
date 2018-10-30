@@ -36,7 +36,13 @@ pub struct GetSessionDetailsResponse {
 #[derive(Debug, Clone)]
 pub struct GetResponseCount {
     pub session_id: String,
-    pub responder: SyncSender<Result<Vec<String>, ()>>,
+    pub responder: SyncSender<Result<GetResponseCountResponse, ()>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct GetResponseCountResponse {
+    pub names: Vec<String>,
+    pub is_ended: bool,
 }
 
 #[derive(Debug, Clone)]
