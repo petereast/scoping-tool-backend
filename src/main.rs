@@ -17,6 +17,7 @@ mod events;
 mod http_interface;
 mod logger;
 mod operations;
+mod redis_state_manager;
 mod state;
 mod state_manager;
 mod utils;
@@ -26,6 +27,7 @@ use actix_web::{fs, http, server, App, HttpRequest, HttpResponse};
 use logger::*;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use operations::*;
+use redis_state_manager::RedisState;
 use state::AppState;
 use state_manager::start_state_manager;
 use std::env;
@@ -45,6 +47,7 @@ fn main() {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
             logger: Logger::with_backend(logger_backend.clone()),
+            redis: RedisState::new("scopify".into()),
         }).handler(
             "/app/assets",
             fs::StaticFiles::new("./static/assets").unwrap(),

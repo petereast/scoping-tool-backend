@@ -44,10 +44,11 @@ pub fn get_response_count(
     let submission_url = format!("{}{}", app_url, get_path.id.clone());
     match data_response {
         Ok(r) => FutOk(HttpResponse::Ok().json(GetResponseCountOkResponse {
-            count: r.len(),
-            names: r,
+            count: r.names.len(),
+            names: r.names,
             session_id: get_path.id.clone(),
             submission_url,
+            is_ended: r.is_ended,
         })).responder(),
         Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
     }

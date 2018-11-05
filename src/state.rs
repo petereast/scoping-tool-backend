@@ -1,6 +1,7 @@
 use events::*;
 use logger::*;
 use mpsc::SyncSender;
+use redis_state_manager::*;
 
 #[derive(Clone, Debug)]
 pub struct SessionState {
@@ -24,4 +25,5 @@ impl SessionState {
 pub struct AppState {
     pub outgoing_events: SyncSender<SystemEvents>,
     pub logger: Logger,
+    pub redis: RedisState,
 }

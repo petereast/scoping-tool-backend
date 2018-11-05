@@ -20,8 +20,7 @@ impl RedisPublishLogger {
         thread::spawn(move || {
             // Start new redis connection and start listening for channel shit
             println!("[debug] redis_url: {}", redis_url());
-            let client =
-                Client::open("redis://scopingtoolbackend_redis_1").expect("Can't connect to redis");
+            let client = Client::open("redis://redis:6379").expect("Can't connect to redis");
 
             let con = match client.get_connection() {
                 Ok(conn) => conn,
