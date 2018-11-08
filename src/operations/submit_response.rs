@@ -17,6 +17,17 @@ pub fn submit_response(
         })).unwrap();
 
     state
+        .redis
+        .emit(
+            SubmitResponseEvent {
+                session_id: payload.session_id.clone().into(),
+                name: payload.name.clone().into(),
+                value: payload.value.clone().into(),
+            },
+            "scopify.SubmitResponse".into(),
+        ).expect("Can't emit SubmitResponseEvent");
+
+    state
         .logger
         .log(format!("[Request] submit_response: {:?}", payload));
     FutOk(
