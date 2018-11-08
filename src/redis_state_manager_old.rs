@@ -19,31 +19,6 @@ pub struct RedisState {
     pub redis_connection: Connection,
 }
 
-pub struct EventStream<T: DeserializeOwned> {
-    queue_name: String,
-    state: Box<RedisState>,
-    pub curr: Option<T>,
-}
-
-impl<T: DeserializeOwned> Iterator for EventStream<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        self.state.get_incoming_events(self.queue_name.clone())
-    }
-}
-
-impl<T: DeserializeOwned> EventStream<T> {
-    pub fn new(queue_name: String, state: Box<RedisState>) -> Self {
-        Self {
-            queue_name,
-            state,
-            curr: None,
-        }
-    }
-}
-
-// This one goes inside the actix web state thing
 impl RedisState {
     pub fn _new(host_id: String) -> Self {
         // Connect to logger
@@ -98,6 +73,17 @@ impl RedisState {
         from_str(response.as_str()).map_err(|_| "Couldn't deserialize incoming response".into())
     }
 
+    pub fn send_response<T>(
+        &self,
+        response_queue_id: String,
+        data: T
+        ) -> () where T: Serialize {
+        redis_cmd("LPUSH")
+            .arg(response_queue_id)
+            .arg(to_string(data))
+            .execute(&self.redis_connection);
+    }
+
     fn get_incoming_events<T>(&self, queue_id: String) -> Option<T>
     where
         T: DeserializeOwned,
@@ -120,13 +106,6 @@ impl RedisState {
 
 // TODO: There should be an enum of usable queues
 // TODO: Also there should be a wrapper around the returned event
-
-pub fn _get_next_event(event_name: String, store: bool) -> Result<String, ()> {
-    if store {
-        println!("{}", event_name);
-    }
-    Err(())
-}
 
 // Returns the id of the queue the data is going to be stored in
 // Serializable s :: s -> String

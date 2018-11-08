@@ -29,7 +29,7 @@ use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use operations::*;
 use redis_state_manager::RedisState;
 use state::AppState;
-use state_manager::start_state_manager;
+use state_manager::{_start_state_manager, start_state_manager};
 use std::env;
 use std::sync::{mpsc, Arc};
 
@@ -39,6 +39,7 @@ fn main() {
     let (outgoing_events_sender, events_incoming_recv) = mpsc::sync_channel(10);
 
     start_state_manager(events_incoming_recv);
+    _start_state_manager();
 
     let logger_backend = Arc::from(RedisPublishLogger::new());
     let logger = Logger::with_backend(logger_backend.clone());
@@ -102,7 +103,7 @@ fn main() {
     let port = match env::var("PORT") {
         Ok(p) => p,
         Err(_) => {
-            if is_ssl {
+            if !is_ssl {
                 String::from("8008")
             } else {
                 String::from("443")
@@ -114,6 +115,8 @@ fn main() {
         logger.log("[STARTING SERVER WITH SSL]".into());
         http_server
             .bind_ssl(format!("0.0.0.0:{}", port), ssl_builder)
+            .unwrap()
+            .bind(format!("0.0.0.0:{}", 8088))
             .unwrap()
             .start();
     } else {

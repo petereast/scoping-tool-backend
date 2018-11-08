@@ -1,5 +1,5 @@
 use redis_state_manager::redis_state::RedisState;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 
 pub struct EventStream<T: DeserializeOwned> {
     queue_name: String,
@@ -7,11 +7,13 @@ pub struct EventStream<T: DeserializeOwned> {
     pub curr: Option<T>,
 }
 
-impl<T: DeserializeOwned> Iterator for EventStream<T> {
+impl<T: DeserializeOwned + Serialize> Iterator for EventStream<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        self.state.get_next_incoming_event(self.queue_name.clone())
+        self.state
+            .get_next_incoming_event(self.queue_name.clone())
+            .map(|wrapped| wrapped.ev)
     }
 }
 

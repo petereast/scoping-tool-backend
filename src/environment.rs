@@ -4,7 +4,7 @@ use std::env;
 pub fn redis_url() -> String {
     match env::var("redis_url") {
         Ok(v) => v,
-        Err(_) => String::from("redis://redis"),
+        Err(_) => String::from("redis"),
     }
 }
 

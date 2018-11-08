@@ -1,15 +1,14 @@
 use environment::redis_url;
-use redis::{cmd as redis_cmd, Client, Connection, ConnectionAddr, ConnectionInfo};
+use redis::{cmd as redis_cmd, pipe, Client, Connection, ConnectionAddr, ConnectionInfo};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{from_str, to_string};
 use uuid::Uuid;
 
 use redis_state_manager::event_stream::EventStream;
 
-#[derive(Serialize)]
-struct OutgoingWrapper<T: Serialize> {
-    ev: T,
-    // The name of where the response is going to be put
+#[derive(Serialize, Deserialize)]
+pub struct WrappedEvent<T: Serialize> {
+    pub ev: T,
     response_queue: String,
 }
 
@@ -20,7 +19,6 @@ pub struct RedisState {
 
 impl RedisState {
     pub fn new(host_id: String) -> Self {
-        // Connect to logger
         let redis_connection_info = ConnectionInfo {
             addr: Box::from(ConnectionAddr::Tcp(redis_url().into(), 6379)),
             db: 2,
@@ -29,8 +27,9 @@ impl RedisState {
         let redis_client =
             Client::open(redis_connection_info).expect("Can't connect to redis (state)");
 
-        let redis_connection = redis_client.get_connection().unwrap();
-        // It's acceptable for this to blow up if the connection fails.
+        let redis_connection = redis_client
+            .get_connection()
+            .expect("Can't connect to redis (state)");
 
         Self {
             host_id,
@@ -38,22 +37,27 @@ impl RedisState {
         }
     }
 
-    pub fn emit(&self, ev: String, queue_name: String) -> Result<String, String> {
+    pub fn emit<T>(&self, ev: T, queue_name: String) -> Result<String, String>
+    where
+        T: Serialize,
+    {
         let response_key = Uuid::new_v4().to_string();
-        // TODO: Do some enums on the event queue name
-        // Return the response id
-        let transport_payload = OutgoingWrapper {
+
+        let transport_payload = WrappedEvent {
             ev,
             response_queue: response_key.clone(),
         };
 
-        let queue_msg = to_string(&transport_payload).expect("thang ain't right");
-        redis_cmd("LPUSH")
-            .arg(queue_name)
-            .arg(queue_msg)
-            .execute(&self.redis_connection);
-
-        Ok(response_key)
+        match to_string(&transport_payload) {
+            Ok(msg) => {
+                redis_cmd("LPUSH")
+                    .arg(queue_name)
+                    .arg(msg)
+                    .execute(&self.redis_connection);
+                Ok(response_key)
+            }
+            Err(_) => Err(String::from("Couldn't parse outgoing event")),
+        }
     }
 
     pub fn get_event_response<T>(
@@ -67,8 +71,9 @@ impl RedisState {
         let response: String = redis_cmd("BRPOPLPUSH")
             .arg(response_queue_id)
             .arg("consumed_responses")
+            .arg(0)
             .query(&self.redis_connection)
-            .unwrap();
+            .expect("Can't get event response");
         from_str(response.as_str()).map_err(|_| "Couldn't deserialize incoming response".into())
     }
 
@@ -78,29 +83,74 @@ impl RedisState {
     {
         redis_cmd("LPUSH")
             .arg(response_queue_id)
-            .arg(to_string::<T>(&data).unwrap())
-            .execute(&self.redis_connection);
+            .arg(to_string::<T>(&data).expect("Can't send response"))
+            .execute(&self.redis_connection)
     }
 
-    pub fn get_next_incoming_event<T>(&self, queue_id: String) -> Option<T>
+    pub fn get_next_incoming_event<T>(&self, queue_id: String) -> Option<WrappedEvent<T>>
     where
-        T: DeserializeOwned,
+        T: DeserializeOwned + Serialize,
     {
         let response: String = redis_cmd("BRPOPLPUSH")
             .arg(queue_id)
             .arg("consumed_events")
+            .arg(0)
             .query(&self.redis_connection)
-            .unwrap();
-        Some(from_str(response.as_str()).unwrap())
+            .expect("Can't get next event");
+        println!("Next incoming event: {}", response);
+        Some(from_str(response.as_str()).expect("Can't parse next_incoming_event"))
     }
 
-    pub fn _wait_for_queue<T>(self, queue_id: String) -> EventStream<T>
+    pub fn get_queue_iter<T>(self, queue_id: String) -> EventStream<T>
     where
         T: DeserializeOwned,
     {
         EventStream::new(queue_id, Box::from(self))
     }
+
+    pub fn save_event<T>(&self, event: T, queues: Vec<String>) -> Result<(), String>
+    where
+        T: DeserializeOwned + Serialize,
+    {
+        match to_string(&event) {
+            Ok(event_string) => {
+                for queue_name in queues {
+                    // TODO: Make this an atomic pipeline with MULTI-EXEC
+                    redis_cmd("RPUSH")
+                        .arg(to_event_queue_name(queue_name))
+                        .arg(event_string.clone())
+                        .execute(&self.redis_connection);
+                }
+                Ok(())
+            }
+            Err(_) => Err("Couldn't parse event".into()),
+        }
+    }
+
+    pub fn read_events<T>(&self, query: String) -> Result<Vec<T>, String>
+    where
+        T: DeserializeOwned,
+    {
+        println!("Attempting to read events");
+        let ev_list: Result<Vec<String>, _> = redis_cmd("LRANGE")
+            .arg("")
+            .arg(0)
+            .arg(-1)
+            .query(&self.redis_connection);
+
+        match ev_list {
+            Ok(events) => Ok(events
+                .iter()
+                .map(|e| from_str::<T>(e).expect("o shit"))
+                .collect()),
+            Err(_) => Err("Nope".into()),
+        }
+    }
 }
 
 // TODO: There should be an enum of usable queues
 // TODO: Also there should be a wrapper around the returned event
+
+fn to_event_queue_name(input: String) -> String {
+    format!("ev_queue:scopify.{}", input)
+}

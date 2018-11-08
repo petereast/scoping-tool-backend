@@ -20,6 +20,15 @@ pub fn new_scoping_session(
             session_description: payload.description.clone().into(),
         })).unwrap();
 
+    state.redis.emit(
+        StartNewSessionEvent {
+            session_id: session_id.clone().into(),
+            session_title: payload.title.clone().into(),
+            session_description: payload.description.clone().into(),
+        },
+        "scoping.StartNewSession".into(),
+    );
+
     let app_url = match env::var("URL") {
         Ok(url) => url,
         Err(_) => "http://localhost:8008/app/scope/".into(),
