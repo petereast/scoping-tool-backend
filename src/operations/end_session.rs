@@ -19,6 +19,15 @@ pub fn end_session(
             session_id: payload.id.clone().into(),
         })).unwrap();
 
+    state
+        .redis
+        .emit(
+            EndSessionEvent {
+                session_id: payload.id.clone().into(),
+            },
+            "scoping.EndSession".into(),
+        ).expect("Couldn't emit EndSessionEvent");
+
     FutOk(
         HttpResponse::Ok()
             .content_type("application/json")
