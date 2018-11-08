@@ -8,8 +8,9 @@ services:
       - .:/opt:z
     ports:
       - "8008:8008"
+      - "8088:8088"
     environment:
-      - URL=http://localhost:8008/
+      - URL=http://localhost:8008/s
       - PORT=8008
     networks:
       - re
