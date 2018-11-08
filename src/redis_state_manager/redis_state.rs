@@ -63,7 +63,7 @@ impl RedisState {
     pub fn get_event_response<T>(
         &self,
         response_queue_id: String,
-        _timeout: i32,
+        timeout: Option<i32>,
     ) -> Result<T, String>
     where
         T: DeserializeOwned + Clone,
@@ -71,7 +71,7 @@ impl RedisState {
         let response: String = redis_cmd("BRPOPLPUSH")
             .arg(response_queue_id)
             .arg("consumed_responses")
-            .arg(0)
+            .arg(timeout.unwrap_or(0))
             .query(&self.redis_connection)
             .expect("Can't get event response");
         from_str(response.as_str()).map_err(|_| "Couldn't deserialize incoming response".into())
