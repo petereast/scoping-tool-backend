@@ -29,6 +29,10 @@ pub fn get_response_count(
         .send(SystemEvents::GetResponseCount(outgoing_event))
         .unwrap();
 
+    //    state
+    //        .redis
+    //        .emit(outgoing_event, "scopify.GetResponseCount".into());
+
     let data_response = recv.recv().unwrap();
 
     state.logger.log(format!(

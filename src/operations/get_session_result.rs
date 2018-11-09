@@ -30,11 +30,29 @@ pub fn get_session_result(
         .send(SystemEvents::GetSessionResult(outgoing_event))
         .unwrap();
 
+    let response_queue = state
+        .redis
+        .emit(
+            _GetSessionResult {
+                session_id: session_id.clone(),
+            },
+            "scopify.GetSessionResult".into(),
+        ).expect("Can't emit GetSessionResult");
+
     let data_response = recv.recv().unwrap();
     state.logger.log(format!(
         "[Data Response] aggregation: {}\n[             ] payload: {:?}",
         aggregation_id, data_response,
     ));
+
+    // Await redis data response
+
+    let resp: GetSessionResultResponse = state
+        .redis
+        .get_event_response(response_queue, None)
+        .expect("Cant do this thing");
+
+    println!("GetSessionResultResponse: {:?}", resp);
 
     match data_response {
         Ok(r) => FutOk(HttpResponse::Ok().json(GetSessionResultOkResponse {
