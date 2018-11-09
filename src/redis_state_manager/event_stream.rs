@@ -1,13 +1,14 @@
 use redis_state_manager::redis_state::RedisState;
 use serde::{de::DeserializeOwned, Serialize};
+use std::cell::RefCell;
 
-pub struct EventStream<T: DeserializeOwned> {
+pub struct EventStream<'a, T: DeserializeOwned> {
     queue_name: String,
-    state: Box<RedisState>,
+    state: &'a RedisState,
     pub curr: Option<T>,
 }
 
-impl<T: DeserializeOwned + Serialize> Iterator for EventStream<T> {
+impl<'a, T: DeserializeOwned + Serialize> Iterator for EventStream<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -17,8 +18,8 @@ impl<T: DeserializeOwned + Serialize> Iterator for EventStream<T> {
     }
 }
 
-impl<T: DeserializeOwned> EventStream<T> {
-    pub fn new(queue_name: String, state: Box<RedisState>) -> Self {
+impl<'a, T: DeserializeOwned> EventStream<'a, T> {
+    pub fn new(queue_name: String, state: &'a RedisState) -> Self {
         Self {
             queue_name,
             state,

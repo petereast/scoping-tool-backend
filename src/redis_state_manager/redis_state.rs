@@ -1,7 +1,8 @@
 use environment::redis_url;
-use redis::{cmd as redis_cmd, pipe, Client, Connection, ConnectionAddr, ConnectionInfo};
+use redis::{cmd as redis_cmd, Client, Connection, ConnectionAddr, ConnectionInfo};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{from_str, to_string};
+use std::cell::RefCell;
 use uuid::Uuid;
 
 use redis_state_manager::event_stream::EventStream;
@@ -101,11 +102,11 @@ impl RedisState {
         Some(from_str(response.as_str()).expect("Can't parse next_incoming_event"))
     }
 
-    pub fn get_queue_iter<T>(self, queue_id: String) -> EventStream<T>
+    pub fn get_queue_iter<'a, T>(state: &'a RedisState, queue_id: String) -> EventStream<'a, T>
     where
         T: DeserializeOwned,
     {
-        EventStream::new(queue_id, Box::from(self))
+        EventStream::new(queue_id, state)
     }
 
     pub fn save_event<T>(&self, event: T, queues: Vec<String>) -> Result<(), String>
