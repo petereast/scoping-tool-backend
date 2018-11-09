@@ -23,7 +23,7 @@ mod state_manager;
 mod utils;
 
 use actix_web::middleware::cors::Cors;
-use actix_web::{fs, http, server, App, HttpRequest, HttpResponse};
+use actix_web::{fs, http, server::HttpServer, App, HttpRequest, HttpResponse};
 use logger::*;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use operations::*;
@@ -44,14 +44,14 @@ fn main() {
     let logger_backend = Arc::from(RedisPublishLogger::new());
     let logger = Logger::with_backend(logger_backend.clone());
 
-    let http_server = server::new(move || {
+    let http_server = HttpServer::new(move || {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
             logger: Logger::with_backend(logger_backend.clone()),
             redis: Box::from(RedisState::new("scopify".into())),
         }).handler(
-            "/app/assets",
-            fs::StaticFiles::new("./static/assets").unwrap(),
+            "/app/assets/",
+            fs::StaticFiles::new("./static/assets").expect("Couldn't load static assets folder"),
         ).handler("/app", |_req: &HttpRequest<AppState>| {
             HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")
@@ -79,7 +79,7 @@ fn main() {
                 }).resource("/s/{id}", |r| r.method(http::Method::GET).with(start_scope))
                 .resource("/", |r| {
                     r.f(|_| {
-                        HttpResponse::PermanentRedirect()
+                        HttpResponse::TemporaryRedirect()
                             .header("Location", "/app/")
                             .finish()
                     })
@@ -87,7 +87,8 @@ fn main() {
         })
     });
 
-    let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())
+        .expect("Can't do the ssl thing, idk what");
 
     let is_ssl_private_key = ssl_builder
         .set_private_key_file("./ssl_private_key.pem", SslFiletype::PEM)
@@ -106,13 +107,13 @@ fn main() {
             if !is_ssl {
                 String::from("8008")
             } else {
-                String::from("443")
+                String::from("8008")
             }
         }
     };
 
     if is_ssl {
-        logger.log("[STARTING SERVER WITH SSL]".into());
+        logger.log("[STARTING SERVER (WITH SSL)]".into());
         http_server
             .bind_ssl(format!("0.0.0.0:{}", port), ssl_builder)
             .unwrap()
@@ -123,7 +124,7 @@ fn main() {
         logger.log("[STARTING SERVER WITHOUT SSL]".into());
         http_server
             .bind(format!("0.0.0.0:{}", port))
-            .unwrap()
+            .expect("Can't bind to http")
             .start();
     }
 
