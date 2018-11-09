@@ -48,7 +48,7 @@ fn main() {
         App::with_state(AppState {
             outgoing_events: outgoing_events_sender.clone(),
             logger: Logger::with_backend(logger_backend.clone()),
-            redis: RedisState::new("scopify".into()),
+            redis: Box::from(RedisState::new("scopify".into())),
         }).handler(
             "/app/assets",
             fs::StaticFiles::new("./static/assets").unwrap(),
