@@ -40,18 +40,24 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
 // A redis state manager
 pub fn _start_state_manager() {
     // Spawn a handler
-    let state = RedisState::new("".into());
-
-    let start_new_session_events: EventStream<StartNewSessionEvent> =
-        state.get_queue_iter("scoping.StartNewSession".into());
+    let state = RedisState::new("root".into());
 
     thread::spawn(move || {
-        println!("Spawning new thing");
         let local_state = RedisState::new("start_new_session_events".into());
+        let start_new_session_events: EventStream<StartNewSessionEvent> =
+            RedisState::get_queue_iter(&local_state, "scoping.StartNewSession".into());
+
         for ev in start_new_session_events {
-            // listen to an event
-            println!("GOT ONE!!");
             _start_new_session(&local_state, ev);
+        }
+    });
+
+    thread::spawn(move || {
+        let local_state = RedisState::new("new_submission_events".into());
+        let submit_response_events: EventStream<SubmitResponseEvent> =
+            RedisState::get_queue_iter(&local_state, "scopify.SubmitResponse".into());
+        for ev in submit_response_events {
+            _submit_response(&local_state, ev);
         }
     });
 }
