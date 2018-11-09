@@ -52,6 +52,11 @@ pub struct GetSessionResult {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct _GetSessionResult {
+    pub session_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GetSessionResultResponse {
     pub title: String,
     pub description: String,
