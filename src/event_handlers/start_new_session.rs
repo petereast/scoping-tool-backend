@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 use events::StartNewSessionEvent;
@@ -23,5 +24,5 @@ pub fn _start_new_session(r_state: &RedisState, ev: StartNewSessionEvent) -> () 
         .unwrap();
 
     let evs = r_state.read_events::<StartNewSessionEvent>(ev.session_id.clone());
-    println!("{:?}", evs,);
+    println!("Session started events: {:?}", evs,);
 }
