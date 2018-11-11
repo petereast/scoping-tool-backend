@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use events::{GetSessionResult, GetSessionResultResponse, SubmissionContent, SystemEvents};
 use state::*;
 
-pub fn get_session_result(
+// This code should never run again!
+pub fn _get_session_result(
     session_state: &mut HashMap<String, SessionState>,
     ev: GetSessionResult,
 ) -> () {
