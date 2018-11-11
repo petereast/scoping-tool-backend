@@ -11,6 +11,7 @@ extern crate redis;
 extern crate serde_json;
 extern crate uuid;
 
+mod aggregators;
 mod environment;
 mod event_handlers;
 mod events;
