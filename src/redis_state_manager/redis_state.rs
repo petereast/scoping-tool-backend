@@ -2,7 +2,6 @@ use environment::redis_url;
 use redis::{cmd as redis_cmd, Client, Connection, ConnectionAddr, ConnectionInfo};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{from_str, to_string};
-use std::cell::RefCell;
 use uuid::Uuid;
 
 use redis_state_manager::event_stream::EventStream;
@@ -130,11 +129,11 @@ impl RedisState {
 
     pub fn read_events<T>(&self, query: String) -> Result<Vec<T>, String>
     where
-        T: DeserializeOwned,
+        T: DeserializeOwned + Serialize,
     {
         println!("Attempting to read events");
         let ev_list: Result<Vec<String>, _> = redis_cmd("LRANGE")
-            .arg("")
+            .arg(to_event_queue_name(query))
             .arg(0)
             .arg(-1)
             .query(&self.redis_connection);
@@ -142,16 +141,18 @@ impl RedisState {
         match ev_list {
             Ok(events) => Ok(events
                 .iter()
-                .map(|e| from_str::<T>(e).expect("o shit"))
-                .collect()),
+                .filter_map(|e| match from_str::<T>(e) {
+                    Ok(e) => Some(e),
+                    Err(e) => {
+                        println!("warn: omitting event: {:?}", e);
+                        None
+                    }
+                }).collect()),
             Err(_) => Err("Nope".into()),
         }
     }
 }
 
-// TODO: There should be an enum of usable queues
-// TODO: Also there should be a wrapper around the returned event
-
 fn to_event_queue_name(input: String) -> String {
-    format!("ev_queue:scopify.{}", input)
+    format!("event_shard:scopify.session.{}", input)
 }

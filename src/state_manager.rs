@@ -8,7 +8,8 @@ use redis_state_manager::*;
 
 pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
     thread::spawn(move || {
-        let mut session_state = HashMap::new();
+        let session_state = HashMap::new();
+        println!("WARN: Depricated!! Using old state manager");
         loop {
             let incoming_event = events_incoming_recv
                 .recv()
@@ -16,22 +17,13 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
             // This event is coming from inside the system, but will be copied to be
             // persisted
             match incoming_event {
-                SystemEvents::StartNewSessionEvent(e) => {
-                    start_new_session(&mut session_state, e);
-                }
-                SystemEvents::EndSessionEvent(e) => end_session(&mut session_state, e),
-                SystemEvents::SubmitResponseEvent(e) => {
-                    submit_response(&mut session_state, e);
-                }
                 SystemEvents::GetSessionDetails(e) => {
                     get_session_details(&session_state, e);
                 }
                 SystemEvents::GetResponseCount(e) => {
                     get_response_count(&session_state, e);
                 }
-                SystemEvents::GetSessionResult(e) => {
-                    get_session_result(&mut session_state, e);
-                }
+                _ => (),
             }
         }
     });
@@ -40,7 +32,7 @@ pub fn start_state_manager(events_incoming_recv: Receiver<SystemEvents>) {
 // A redis state manager
 pub fn _start_state_manager() {
     // Spawn a handler
-    let state = RedisState::new("root".into());
+    let _state = RedisState::new("root".into());
 
     thread::spawn(move || {
         let local_state = RedisState::new("start_new_session_events".into());
@@ -48,7 +40,7 @@ pub fn _start_state_manager() {
             RedisState::get_queue_iter(&local_state, "scoping.StartNewSession".into());
 
         for ev in start_new_session_events {
-            _start_new_session(&local_state, ev);
+            start_new_session(&local_state, ev);
         }
     });
 
@@ -58,6 +50,15 @@ pub fn _start_state_manager() {
             RedisState::get_queue_iter(&local_state, "scopify.SubmitResponse".into());
         for ev in submit_response_events {
             _submit_response(&local_state, ev);
+        }
+    });
+
+    thread::spawn(move || {
+        let local_state = RedisState::new("end_session_events".into());
+        let end_session_events: EventStream<EndSessionEvent> =
+            RedisState::get_queue_iter(&local_state, "scopify.EndSession".into());
+        for ev in end_session_events {
+            end_session(&local_state, ev);
         }
     });
 }
