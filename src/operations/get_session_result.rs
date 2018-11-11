@@ -1,36 +1,23 @@
 use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
 use futures::future::{ok as FutOk, Future};
 use mpsc::sync_channel;
+use uuid::Uuid;
 
+use aggregators::*;
 use events::*;
 use http_interface::*;
 use state::*;
-use uuid::Uuid;
 
 pub fn get_session_result(
     (get_path, state): (Path<GetSessionResultCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let aggregation_id = Uuid::new_v4();
-    state.logger.log(format!(
-        "[Request] get_session_details: {:?}\n[       ] aggregation: {}",
-        get_path, aggregation_id
-    ));
+    state
+        .logger
+        .log(format!("[Request] get_session_details: {:?}", get_path));
 
     let session_id = get_path.id.clone();
 
-    let (responder, recv) = sync_channel(1);
-
-    let outgoing_event = GetSessionResult {
-        session_id: session_id.clone(),
-        responder,
-    };
-
-    state
-        .outgoing_events
-        .send(SystemEvents::GetSessionResult(outgoing_event))
-        .unwrap();
-
-    let response_queue = state
+    let _ = state
         .redis
         .emit(
             _GetSessionResult {
@@ -39,29 +26,31 @@ pub fn get_session_result(
             "scopify.GetSessionResult".into(),
         ).expect("Can't emit GetSessionResult");
 
-    let data_response = recv.recv().unwrap();
-    state.logger.log(format!(
-        "[Data Response] aggregation: {}\n[             ] payload: {:?}",
-        aggregation_id, data_response,
-    ));
+    let data_response = hydrate_session_result(&state.redis, session_id.clone());
 
-    // Await redis data response
-
-    let resp: GetSessionResultResponse = state
-        .redis
-        .get_event_response(response_queue, None)
-        .expect("Cant do this thing");
-
-    println!("GetSessionResultResponse: {:?}", resp);
+    println!("Redis response: {:?}", data_response);
 
     match data_response {
-        Ok(r) => FutOk(HttpResponse::Ok().json(GetSessionResultOkResponse {
-            title: r.title,
-            description: r.description,
-            average_response: r.average_response,
-            response_count: r.response_count,
-            responses: r.responses,
-        })).responder(),
-        Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
+        Some(r) => {
+            let average_response = match r.responses.get(0) {
+                Some(initial_value) => r
+                    .responses
+                    .clone()
+                    .split_off(1)
+                    .iter()
+                    .fold(initial_value.value, |acc, response| {
+                        (acc + response.value) / 2
+                    }),
+                None => 0,
+            };
+            FutOk(HttpResponse::Ok().json(GetSessionResultOkResponse {
+                title: r.title,
+                description: r.description,
+                average_response: average_response,
+                response_count: r.response_count,
+                responses: r.responses,
+            })).responder()
+        }
+        None => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
     }
 }
