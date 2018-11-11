@@ -154,5 +154,5 @@ impl RedisState {
 }
 
 fn to_event_queue_name(input: String) -> String {
-    format!("event_shard:scopify.session.{}", input)
+    format!("event_shard:scopify.session.{}:events", input)
 }
