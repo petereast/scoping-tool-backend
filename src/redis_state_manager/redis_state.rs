@@ -60,7 +60,7 @@ impl RedisState {
         }
     }
 
-    pub fn get_event_response<T>(
+    pub fn _get_event_response<T>(
         &self,
         response_queue_id: String,
         timeout: Option<i32>,
@@ -77,7 +77,7 @@ impl RedisState {
         from_str(response.as_str()).map_err(|_| "Couldn't deserialize incoming response".into())
     }
 
-    pub fn send_response<T>(&self, response_queue_id: String, data: T) -> ()
+    pub fn _send_response<T>(&self, response_queue_id: String, data: T) -> ()
     where
         T: Serialize,
     {

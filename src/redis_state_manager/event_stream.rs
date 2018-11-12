@@ -1,6 +1,5 @@
 use redis_state_manager::redis_state::RedisState;
 use serde::{de::DeserializeOwned, Serialize};
-use std::cell::RefCell;
 
 pub struct EventStream<'a, T: DeserializeOwned> {
     queue_name: String,

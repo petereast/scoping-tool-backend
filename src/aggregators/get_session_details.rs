@@ -15,7 +15,7 @@ pub fn get_session_details<'a>(
             is_ended: false,
             session_id: e.session_id.clone(),
         }),
-        SystemEvents::EndSessionEvent(e) => Some(SessionDetails {
+        SystemEvents::EndSessionEvent(_e) => Some(SessionDetails {
             is_ended: true,
             ..acc.unwrap_or(SessionDetails::aggregate_root())
         }),
