@@ -12,13 +12,14 @@ pub fn new_scoping_session(
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let session_id = generate_id();
 
-    state
-        .outgoing_events
-        .send(SystemEvents::StartNewSessionEvent(StartNewSessionEvent {
-            session_id: session_id.clone().into(),
-            session_title: payload.title.clone().into(),
-            session_description: payload.description.clone().into(),
-        })).unwrap();
+    state.redis.emit(
+        StartNewSessionEvent::new(
+            session_id.clone().into(),
+            payload.title.clone().into(),
+            payload.description.clone().into(),
+        ),
+        "scoping.StartNewSession".into(),
+    );
 
     let app_url = match env::var("URL") {
         Ok(url) => url,

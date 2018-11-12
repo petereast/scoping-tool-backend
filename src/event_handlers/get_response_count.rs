@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use events::{GetResponseCount, GetResponseCountResponse, SystemEvents};
 use state::*;
 
 pub fn get_response_count(

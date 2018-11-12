@@ -11,13 +11,13 @@ pub fn end_session(
     state
         .logger
         .log(format!("[Request] end_session: {:?}", payload));
-    // Stop accepting new, incoming requests
 
     state
-        .outgoing_events
-        .send(SystemEvents::EndSessionEvent(EndSessionEvent {
-            session_id: payload.id.clone().into(),
-        })).unwrap();
+        .redis
+        .emit(
+            EndSessionEvent::new(payload.id.clone().into()),
+            "scoping.EndSession".into(),
+        ).expect("Couldn't emit EndSessionEvent");
 
     FutOk(
         HttpResponse::Ok()

@@ -1,8 +1,7 @@
 use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
+use aggregators::get_session_details as hydrate_session_details;
 use futures::future::{ok as FutOk, Future};
-use mpsc::sync_channel;
 
-use events::*;
 use http_interface::*;
 use state::*;
 
@@ -12,27 +11,10 @@ pub fn get_session_details(
     state
         .logger
         .log(format!("[Request] get_session_details: {:?}", get_path));
+    let session = hydrate_session_details(&state.redis, get_path.id.clone());
 
-    let (responder, recv) = sync_channel(1);
-
-    let outgoing_event = GetSessionDetails {
-        session_id: get_path.id.clone(),
-        responder,
-    };
-
-    state
-        .outgoing_events
-        .send(SystemEvents::GetSessionDetails(outgoing_event))
-        .unwrap();
-
-    let data_response = recv.recv().unwrap();
-
-    println!("thing: {:?}", data_response);
-
-    // If the session is ended, redirect the user to the results page.
-
-    match data_response {
-        Ok(r) => {
+    match session {
+        Some(r) => {
             if !r.is_ended {
                 FutOk(HttpResponse::Ok().json(GetSessionDetailsOkResponse {
                     title: r.title,
@@ -48,6 +30,6 @@ pub fn get_session_details(
                 ).responder()
             }
         }
-        Err(_) => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
+        None => FutOk(HttpResponse::NotFound().body("not_found")).responder(),
     }
 }

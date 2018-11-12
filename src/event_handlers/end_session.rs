@@ -1,20 +1,9 @@
-use std::collections::HashMap;
-
 use events::EndSessionEvent;
-use state::*;
+use redis_state_manager::*;
 
-pub fn end_session(session_state: &mut HashMap<String, SessionState>, ev: EndSessionEvent) -> () {
-    match session_state.clone().get(&ev.session_id) {
-        Some(s) => {
-            let next_state = SessionState {
-                accepting_new_submissions: false,
-                ..(*s).clone()
-            };
-            session_state.insert(ev.session_id, next_state.clone());
-            println!("[info] next state: {:?}", next_state);
-        }
-        None => {
-            println!("[warn] invalid id");
-        }
-    };
+pub fn end_session(r_state: &RedisState, ev: EndSessionEvent) -> () {
+    // TODO: Move this logic into the http handler
+    r_state
+        .save_event(ev.clone(), vec![ev.session_id.clone()])
+        .unwrap();
 }

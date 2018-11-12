@@ -11,6 +11,7 @@ extern crate redis;
 extern crate serde_json;
 extern crate uuid;
 
+mod aggregators;
 mod environment;
 mod event_handlers;
 mod events;
@@ -27,6 +28,7 @@ use actix_web::{fs, http, server::HttpServer, App, HttpRequest, HttpResponse};
 use logger::*;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use operations::*;
+use redis_state_manager::RedisState;
 use state::AppState;
 use state_manager::start_state_manager;
 use std::env;
@@ -35,17 +37,15 @@ use std::sync::{mpsc, Arc};
 fn main() {
     let sys = actix::System::new("web");
 
-    let (outgoing_events_sender, events_incoming_recv) = mpsc::sync_channel(10);
-
-    start_state_manager(events_incoming_recv);
+    start_state_manager();
 
     let logger_backend = Arc::from(RedisPublishLogger::new());
     let logger = Logger::with_backend(logger_backend.clone());
 
     let http_server = HttpServer::new(move || {
         App::with_state(AppState {
-            outgoing_events: outgoing_events_sender.clone(),
             logger: Logger::with_backend(logger_backend.clone()),
+            redis: Box::from(RedisState::new("scopify".into())),
         }).handler(
             "/app/assets/",
             fs::StaticFiles::new("./static/assets").expect("Couldn't load static assets folder"),
@@ -101,8 +101,8 @@ fn main() {
     let port = match env::var("PORT") {
         Ok(p) => p,
         Err(_) => {
-            if is_ssl {
-                String::from("8443")
+            if !is_ssl {
+                String::from("8008")
             } else {
                 String::from("8008")
             }
@@ -113,9 +113,9 @@ fn main() {
         logger.log("[STARTING SERVER (WITH SSL)]".into());
         http_server
             .bind_ssl(format!("0.0.0.0:{}", port), ssl_builder)
-            .expect("Can't bind to ssl")
-            .bind("0.0.0.0:8000")
-            .expect("Can't bind to http")
+            .unwrap()
+            .bind(format!("0.0.0.0:{}", 8088))
+            .unwrap()
             .start();
     } else {
         logger.log("[STARTING SERVER WITHOUT SSL]".into());
