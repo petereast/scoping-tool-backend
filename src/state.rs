@@ -1,6 +1,5 @@
 use events::*;
 use logger::*;
-use mpsc::SyncSender;
 use redis_state_manager::*;
 
 #[derive(Clone, Debug)]
@@ -12,7 +11,7 @@ pub struct SessionState {
 }
 
 impl SessionState {
-    pub fn new(title: String, description: String) -> Self {
+    pub fn _new(title: String, description: String) -> Self {
         Self {
             title,
             description,

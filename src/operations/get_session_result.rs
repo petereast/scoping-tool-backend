@@ -1,10 +1,7 @@
 use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
 use futures::future::{ok as FutOk, Future};
-use mpsc::sync_channel;
-use uuid::Uuid;
 
 use aggregators::*;
-use events::*;
 use http_interface::*;
 use state::*;
 

@@ -1,5 +1,3 @@
-use mpsc::Receiver;
-use std::collections::HashMap;
 use std::thread;
 
 use event_handlers::*;
@@ -26,7 +24,7 @@ pub fn start_state_manager() {
         let submit_response_events: EventStream<SubmitResponseEvent> =
             RedisState::get_queue_iter(&local_state, "scopify.SubmitResponse".into());
         for ev in submit_response_events {
-            _submit_response(&local_state, ev);
+            submit_response(&local_state, ev);
         }
     });
 
