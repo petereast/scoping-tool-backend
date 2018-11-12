@@ -8,14 +8,6 @@ use state::*;
 pub fn submit_response(
     (payload, state): (Json<SubmitResponseCmd>, State<AppState>),
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    //    state
-    //        .outgoing_events
-    //        .send(SystemEvents::SubmitResponseEvent(SubmitResponseEvent {
-    //            session_id: payload.session_id.clone().into(),
-    //            name: payload.name.clone().into(),
-    //            value: payload.value.clone().into(),
-    //        })).unwrap();
-
     state
         .redis
         .emit(

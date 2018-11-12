@@ -17,15 +17,6 @@ pub fn get_session_result(
 
     let session_id = get_path.id.clone();
 
-    let _ = state
-        .redis
-        .emit(
-            _GetSessionResult {
-                session_id: session_id.clone(),
-            },
-            "scopify.GetSessionResult".into(),
-        ).expect("Can't emit GetSessionResult");
-
     let data_response = hydrate_session_result(&state.redis, session_id.clone());
 
     println!("Redis response: {:?}", data_response);

@@ -1,8 +1,6 @@
 use actix_web::{AsyncResponder, Error, HttpResponse, Path, State};
 use futures::future::{ok as FutOk, Future};
-use mpsc::sync_channel;
 use std::env;
-use uuid::Uuid;
 
 use events::*;
 use http_interface::*;
