@@ -143,10 +143,7 @@ impl RedisState {
                 .iter()
                 .filter_map(|e| match from_str::<T>(e) {
                     Ok(e) => Some(e),
-                    Err(e) => {
-                        println!("warn: omitting event: {:?}", e);
-                        None
-                    }
+                    Err(e) => None,
                 }).collect()),
             Err(_) => Err("Nope".into()),
         }
