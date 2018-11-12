@@ -30,24 +30,20 @@ use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use operations::*;
 use redis_state_manager::RedisState;
 use state::AppState;
-use state_manager::{_start_state_manager, start_state_manager};
+use state_manager::start_state_manager;
 use std::env;
 use std::sync::{mpsc, Arc};
 
 fn main() {
     let sys = actix::System::new("web");
 
-    let (outgoing_events_sender, events_incoming_recv) = mpsc::sync_channel(10);
-
-    start_state_manager(events_incoming_recv);
-    _start_state_manager();
+    start_state_manager();
 
     let logger_backend = Arc::from(RedisPublishLogger::new());
     let logger = Logger::with_backend(logger_backend.clone());
 
     let http_server = HttpServer::new(move || {
         App::with_state(AppState {
-            outgoing_events: outgoing_events_sender.clone(),
             logger: Logger::with_backend(logger_backend.clone()),
             redis: Box::from(RedisState::new("scopify".into())),
         }).handler(
