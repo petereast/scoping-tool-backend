@@ -1,5 +1,5 @@
-mod response_count;
+mod get_session_details;
 mod session_result;
 
-pub use self::response_count::*;
+pub use self::get_session_details::*;
 pub use self::session_result::*;
