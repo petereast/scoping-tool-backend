@@ -13,7 +13,7 @@ services:
     networks:
       - re
   redis:
-    image: redis
+    image: redis:5
     networks:
       - re
 

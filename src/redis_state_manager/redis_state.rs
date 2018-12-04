@@ -21,7 +21,7 @@ impl RedisState {
     pub fn new(host_id: String) -> Self {
         let redis_connection_info = ConnectionInfo {
             addr: Box::from(ConnectionAddr::Tcp(redis_url().into(), 6379)),
-            db: 2,
+            db: 1,
             passwd: None,
         };
         let redis_client =
@@ -39,17 +39,18 @@ impl RedisState {
 
     pub fn emit<T>(&self, ev: T, queue_name: String) -> Result<String, String>
     where
-        T: Serialize,
+        T: Serialize + Clone,
     {
         let response_key = Uuid::new_v4().to_string();
 
         let transport_payload = WrappedEvent {
-            ev,
+            ev: ev.clone(),
             response_queue: response_key.clone(),
         };
 
         match to_string(&transport_payload) {
             Ok(msg) => {
+                self.save_event(ev, vec![queue_name.clone()])?;
                 redis_cmd("LPUSH")
                     .arg(queue_name)
                     .arg(msg)
@@ -110,14 +111,14 @@ impl RedisState {
 
     pub fn save_event<T>(&self, event: T, queues: Vec<String>) -> Result<(), String>
     where
-        T: DeserializeOwned + Serialize,
+        T: Serialize,
     {
         match to_string(&event) {
             Ok(event_string) => {
                 for queue_name in queues {
                     // TODO: Make this an atomic pipeline with MULTI-EXEC
-                    redis_cmd("RPUSH")
-                        .arg(to_event_queue_name(queue_name))
+                    redis_cmd("SADD") // Need to ignore if already exists
+                        .arg(to_event_set_name(queue_name))
                         .arg(event_string.clone())
                         .execute(&self.redis_connection);
                 }
@@ -132,10 +133,8 @@ impl RedisState {
         T: DeserializeOwned + Serialize,
     {
         println!("Attempting to read events");
-        let ev_list: Result<Vec<String>, _> = redis_cmd("LRANGE")
-            .arg(to_event_queue_name(query))
-            .arg(0)
-            .arg(-1)
+        let ev_list: Result<Vec<String>, _> = redis_cmd("SMEMBERS")
+            .arg(to_event_set_name(query))
             .query(&self.redis_connection);
 
         match ev_list {
@@ -152,4 +151,7 @@ impl RedisState {
 
 fn to_event_queue_name(input: String) -> String {
     format!("event_shard:scopify.session.{}:events", input)
+}
+fn to_event_set_name(input: String) -> String {
+    format!("event_shard:scopify.session.{}:data", input)
 }
