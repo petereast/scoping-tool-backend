@@ -143,7 +143,7 @@ impl RedisState {
                 .iter()
                 .filter_map(|e| match from_str::<T>(e) {
                     Ok(e) => Some(e),
-                    Err(e) => None,
+                    Err(_) => None,
                 }).collect()),
             Err(_) => Err("Nope".into()),
         }
