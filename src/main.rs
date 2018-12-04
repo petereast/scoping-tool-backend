@@ -30,14 +30,14 @@ use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use operations::*;
 use redis_state_manager::RedisState;
 use state::AppState;
-use state_manager::start_state_manager;
+use state_manager::start_event_listeners;
 use std::env;
 use std::sync::{mpsc, Arc};
 
 fn main() {
     let sys = actix::System::new("web");
 
-    start_state_manager();
+    start_event_listeners();
 
     let logger_backend = Arc::from(RedisPublishLogger::new());
     let logger = Logger::with_backend(logger_backend.clone());

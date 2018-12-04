@@ -4,11 +4,7 @@ use event_handlers::*;
 use events::*;
 use redis_state_manager::*;
 
-// A redis state manager
-pub fn start_state_manager() {
-    // Spawn a handler
-    let _state = RedisState::new("root".into());
-
+pub fn start_event_listeners() {
     thread::spawn(move || {
         let local_state = RedisState::new("start_new_session_events".into());
         let start_new_session_events: EventStream<StartNewSessionEvent> =
